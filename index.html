@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100b18"><link rel="manifest" href="manifest.json">
+<title>Histórias Interativas</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0810;color:#f5eff8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:auto;padding:18px 16px 32px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+h1{font-size:25px;margin:0}.muted{color:#aaa0b2}.card{background:#15101c;border:1px solid #30263a;border-radius:18px;padding:18px;margin:12px 0}
+button,input,textarea,select{font:inherit}button{border:1px solid #453650;background:#211729;color:#fff;border-radius:13px;padding:13px 15px;min-height:46px;cursor:pointer}
+button.primary{background:#7545a1;border-color:#8f60bd}.buttons{display:grid;gap:10px;margin-top:16px}
+input,textarea,select{width:100%;background:#0f0b14;color:#fff;border:1px solid #453650;border-radius:11px;padding:12px;margin:6px 0 12px}textarea{min-height:120px;resize:vertical}
+label{font-size:13px;color:#bcb2c4}.sceneTitle{font-size:23px;margin:5px 0 12px}.storyText{white-space:pre-wrap;line-height:1.7}.choice{text-align:left}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.small{font-size:12px}.danger{border-color:#6a3540}.hidden{display:none!important}
+.nav{display:flex;gap:8px;overflow:auto;padding-bottom:5px}.nav button{white-space:nowrap}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#261a31;color:#cdb8db;font-size:12px}
+</style></head>
+<body><main id="app"></main>
+<script>
+const KEY="hist_interativas_v1";
+const sample={
+ id:"hotel",name:"A Última Porta",description:"Mistério sobrenatural no Hotel.",start:"start",
+ scenes:{
+ start:{title:"A batida na porta",text:"Você está no Hotel Hazbin. Depois de uma noite estranha, três batidas ecoam pela sua porta. O corredor está silencioso.",choices:[
+  {text:"Abrir a porta",to:"hall"},{text:"Ignorar e procurar pistas",to:"library"}]},
+ hall:{title:"O corredor",text:"Alastor está parado no corredor. Ele mantém seu sorriso habitual, mas parece esconder alguma coisa.",choices:[
+  {text:"Perguntar o que aconteceu",to:"truth"},{text:"Segui-lo em silêncio",to:"basement"}]},
+ library:{title:"A biblioteca",text:"Entre livros antigos você encontra uma fotografia que mostra você diante de uma porta que não existe no hotel.",choices:[
+  {text:"Examinar a fotografia",to:"truth"},{text:"Procurar outra saída",to:"basement"}]},
+ basement:{title:"O porão",text:"Uma caixa metálica está sobre uma mesa. Dentro há uma chave marcada com 03:17.",choices:[
+  {text:"Pegar a chave",to:"truth"}]},
+ truth:{title:"A verdade",text:"A chave abre uma porta escondida. Do outro lado está exatamente o quarto onde você começou. A história parece estar se repetindo.",choices:[
+  {text:"Continuar",to:"ending"},{text:"Voltar",to:"start"}]},
+ ending:{title:"Final: o começo",text:"A porta se fecha. Você percebe que agora existe uma nova escolha escrita na parede: criar sua própria história.",choices:[
+  {text:"Recomeçar",to:"start"}]}
+ }};
+let db=JSON.parse(localStorage.getItem(KEY)||"null"); if(!db){db={stories:[sample]};save()}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+const app=document.getElementById("app");
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function shell(title,back=true){app.innerHTML=`<div class="top"><h1>${esc(title)}</h1>${back?'<button id="back">←</button>':''}</div>`;if(back)document.getElementById("back").onclick=home}
+function home(){
+ shell("Histórias Interativas",false);
+ app.innerHTML+=`<div class="card"><div class="muted">Crie aventuras com cenas, escolhas e múltiplas rotas.</div><div class="buttons">
+ <button class="primary" id="play">▶ Jogar</button><button id="create">✚ Criar história</button><button id="edit">✎ Minhas histórias</button>
+ </div></div><div class="card"><b>Como funciona</b><p class="muted">Cada cena possui um texto e escolhas. Cada escolha aponta para outra cena. Assim você constrói sua própria árvore de história.</p></div>`;
+ document.getElementById("play").onclick=()=>storyList(true);document.getElementById("create").onclick=()=>newStory();document.getElementById("edit").onclick=()=>storyList(false)
+}
+function storyList(play){
+ shell(play?"Escolha uma história":"Minhas histórias");
+ db.stories.forEach((s,i)=>{app.innerHTML+=`<div class="card"><b>${esc(s.name)}</b><p class="muted">${esc(s.description)}</p><div class="buttons"><button data-play="${i}">▶ ${play?"Jogar":"Abrir editor"}</button>${!play?`<button class="danger" data-del="${i}">Excluir</button>`:""}</div></div>`});
+ document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>play?playStory(+b.dataset.play):storyEditor(+b.dataset.play));
+ document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Excluir esta história?")){db.stories.splice(+b.dataset.del,1);save();storyList(false)}})
+}
+function playStory(si){
+ const s=db.stories[si], ids=Object.keys(s.scenes); let cur=s.start||ids[0];
+ function render(){const x=s.scenes[cur];shell(s.name);app.innerHTML+=`<div class="card"><span class="pill">Cena: ${esc(cur)}</span><div class="sceneTitle">${esc(x.title)}</div><div class="storyText">${esc(x.text)}</div><div class="buttons">${(x.choices||[]).map((c,i)=>`<button class="choice" data-c="${i}">${esc(c.text)}</button>`).join("")}</div></div>`;document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const to=x.choices[+b.dataset.c].to;if(s.scenes[to]){cur=to;render()}else alert("Esta rota aponta para uma cena que não existe.")})}
+ render()
+}
+function newStory(){
+ shell("Nova história");
+ app.innerHTML+=`<div class="card"><label>Nome</label><input id="name" placeholder="Ex.: A Casa Vermelha"><label>Descrição</label><textarea id="desc" placeholder="Sobre o que é a história?"></textarea><div class="buttons"><button class="primary" id="go">Criar</button></div></div>`;
+ document.getElementById("go").onclick=()=>{const name=document.getElementById("name").value.trim()||"Minha história";const s={id:crypto.randomUUID(),name,description:document.getElementById("desc").value.trim(),start:"inicio",scenes:{inicio:{title:"Início",text:"Comece sua história...",choices:[]}}};db.stories.push(s);save();storyEditor(db.stories.length-1)}
+}
+function storyEditor(si){
+ const s=db.stories[si];shell("Editar: "+s.name);
+ app.innerHTML+=`<div class="card"><label>Nome</label><input id="sn" value="${esc(s.name)}"><label>Descrição</label><textarea id="sd">${esc(s.description)}</textarea><label>Cena inicial</label><select id="start">${Object.keys(s.scenes).map(id=>`<option ${id===s.start?"selected":""}>${esc(id)}</option>`).join("")}</select><button class="primary" id="saveMeta">Salvar dados</button></div>`;
+ app.innerHTML+=`<div class="card"><b>Cenas</b><div class="buttons">${Object.entries(s.scenes).map(([id,x])=>`<button data-scene="${esc(id)}">${esc(id)} — ${esc(x.title)}</button>`).join("")}</div><div class="buttons"><button id="add">✚ Nova cena</button><button id="playtest">▶ Testar história</button></div></div>`;
+ document.getElementById("saveMeta").onclick=()=>{s.name=document.getElementById("sn").value;s.description=document.getElementById("sd").value;s.start=document.getElementById("start").value;save();storyEditor(si)}
+ document.querySelectorAll("[data-scene]").forEach(b=>b.onclick=()=>editScene(si,b.dataset.scene));document.getElementById("add").onclick=()=>addScene(si);document.getElementById("playtest").onclick=()=>playStory(si)
+}
+function addScene(si){
+ const id=prompt("ID da cena (sem espaços):");if(!id)return;if(db.stories[si].scenes[id])return alert("Esse ID já existe.");
+ db.stories[si].scenes[id]={title:"Nova cena",text:"Escreva aqui...",choices:[]};save();editScene(si,id)
+}
+function editScene(si,id){
+ const s=db.stories[si],x=s.scenes[id];shell("Cena: "+id);
+ app.innerHTML+=`<div class="card"><label>Título</label><input id="t" value="${esc(x.title)}"><label>Texto</label><textarea id="b">${esc(x.text)}</textarea><b>Escolhas</b><div id="choices"></div><div class="buttons"><button id="addc">✚ Adicionar escolha</button><button class="primary" id="savec">Salvar cena</button><button class="danger" id="delc">Excluir cena</button></div></div>`;
+ const box=document.getElementById("choices");
+ function draw(){box.innerHTML="";(x.choices||[]).forEach((c,i)=>{box.innerHTML+=`<div class="card"><label>Texto da escolha</label><input data-q="${i}" value="${esc(c.text)}"><label>Vai para a cena</label><select data-to="${i}">${Object.keys(s.scenes).map(k=>`<option ${k===c.to?"selected":""}>${esc(k)}</option>`).join("")}</select><button data-r="${i}">Remover</button></div>`);});box.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{x.choices.splice(+b.dataset.r,1);draw()})}
+ draw();
+ document.getElementById("addc").onclick=()=>{x.choices.push({text:"Nova escolha",to:id});draw()};
+ document.getElementById("savec").onclick=()=>{x.title=document.getElementById("t").value;x.text=document.getElementById("b").value;const qs=[...box.querySelectorAll("[data-q]")],tos=[...box.querySelectorAll("[data-to]")];x.choices=x.choices.map((c,i)=>({text:qs[i]?.value||c.text,to:tos[i]?.value||c.to}));save();storyEditor(si)};
+ document.getElementById("delc").onclick=()=>{if(Object.keys(s.scenes).length<=1)return alert("A história precisa de pelo menos uma cena.");if(confirm("Excluir esta cena?")){delete s.scenes[id];if(s.start===id)s.start=Object.keys(s.scenes)[0];save();storyEditor(si)}}
+}
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+home();
+</script></body></html>
