@@ -1,9 +1,20 @@
-HISTÓRIAS INTERATIVAS — APP PARA ANDROID
+STORYVERSE — HISTÓRIAS INTERATIVAS
 
-1) Coloque esta pasta em uma hospedagem HTTPS (GitHub Pages, Netlify, Vercel etc.).
-2) Abra o endereço no Chrome do Android.
-3) Use o menu do Chrome > Adicionar à tela inicial / Instalar aplicativo.
-4) O app funcionará em modo de aplicativo e salvará as histórias no aparelho.
+Nova versão com biblioteca e pesquisa.
+- Biblioteca com várias histórias de exemplo
+- Pesquisa por título, descrição, autor e gênero
+- Filtros por categorias
+- Favoritos salvos no aparelho
+- Página de detalhes da história
+- Jogar histórias com múltiplas rotas
+- Criar e editar histórias, cenas e escolhas
+- Design mobile escuro inspirado em apps modernos de descoberta de conteúdo
 
-O criador permite criar histórias, cenas e escolhas ligadas a outras cenas.
-Para um APK nativo, este projeto pode posteriormente ser empacotado com uma ferramenta Android/PWA.
+PUBLICAÇÃO NO GITHUB PAGES
+1. Extraia o ZIP.
+2. No repositório do GitHub, substitua index.html, manifest.json e sw.js.
+3. Faça commit na branch main.
+4. Aguarde o GitHub Pages atualizar.
+5. Abra o endereço do Pages e recarregue a página.
+
+Os dados ficam no localStorage do navegador. Eles não são sincronizados entre aparelhos.

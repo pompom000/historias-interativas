@@ -1,10 +1,10 @@
 {
-  "name": "Histórias Interativas",
-  "short_name": "Histórias",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#0b0810",
-  "theme_color": "#100b18",
-  "lang": "pt-BR",
-  "icons": []
+  "name":"StoryVerse — Histórias Interativas",
+  "short_name":"StoryVerse",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#09090b",
+  "theme_color":"#09090b",
+  "description":"Biblioteca e criador de histórias interativas.",
+  "lang":"pt-BR"
 }
