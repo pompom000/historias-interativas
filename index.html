@@ -76,7 +76,13 @@ function editScene(si,id){
  const s=db.stories[si],x=s.scenes[id];shell("Cena: "+id);
  app.innerHTML+=`<div class="card"><label>Título</label><input id="t" value="${esc(x.title)}"><label>Texto</label><textarea id="b">${esc(x.text)}</textarea><b>Escolhas</b><div id="choices"></div><div class="buttons"><button id="addc">✚ Adicionar escolha</button><button class="primary" id="savec">Salvar cena</button><button class="danger" id="delc">Excluir cena</button></div></div>`;
  const box=document.getElementById("choices");
- function draw(){box.innerHTML="";(x.choices||[]).forEach((c,i)=>{box.innerHTML+=`<div class="card"><label>Texto da escolha</label><input data-q="${i}" value="${esc(c.text)}"><label>Vai para a cena</label><select data-to="${i}">${Object.keys(s.scenes).map(k=>`<option ${k===c.to?"selected":""}>${esc(k)}</option>`).join("")}</select><button data-r="${i}">Remover</button></div>`);});box.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{x.choices.splice(+b.dataset.r,1);draw()})}
+ function draw(){
+  box.innerHTML="";
+  (x.choices||[]).forEach((c,i)=>{
+    box.innerHTML += `<div class="card"><label>Texto da escolha</label><input data-q="${i}" value="${esc(c.text)}"><label>Vai para a cena</label><select data-to="${i}">${Object.keys(s.scenes).map(k=>`<option ${k===c.to?"selected":""}>${esc(k)}</option>`).join("")}</select><button data-r="${i}">Remover</button></div>`;
+  });
+  box.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{x.choices.splice(+b.dataset.r,1);draw()});
+ }
  draw();
  document.getElementById("addc").onclick=()=>{x.choices.push({text:"Nova escolha",to:id});draw()};
  document.getElementById("savec").onclick=()=>{x.title=document.getElementById("t").value;x.text=document.getElementById("b").value;const qs=[...box.querySelectorAll("[data-q]")],tos=[...box.querySelectorAll("[data-to]")];x.choices=x.choices.map((c,i)=>({text:qs[i]?.value||c.text,to:tos[i]?.value||c.to}));save();storyEditor(si)};
